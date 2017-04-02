@@ -9,6 +9,7 @@ An attempt ot use ML techniques to predict bankruptcies in companies.
 # Instructions
 
 * Unzip files from https://archive.ics.uci.edu/ml/datasets/Polish+companies+bankruptcy+data# into data/
+* run `python create_csv_files.py`
 
 ## Version info
 
