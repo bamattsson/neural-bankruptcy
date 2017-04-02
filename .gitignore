@@ -1,5 +1,7 @@
 #### Added by us
 data/
+output/
+*.swp
 
 #### Added by github
 # Byte-compiled / optimized / DLL files
