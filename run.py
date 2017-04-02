@@ -35,6 +35,14 @@ def perform_one_run():
     pass
 
 
+def perform_cv_runs():
+    # take data set
+    # split up in cv and perform runs
+    # concatenate results to list
+    # returns averages
+    pass
+
+
 def main(yaml_path='./config.yml', run_name=None):
 
     if run_name is None:
@@ -44,6 +52,8 @@ def main(yaml_path='./config.yml', run_name=None):
         os.makedirs(run_path)
 
     config = load_yaml_and_save(yaml_path, run_path)
+
+    # Do the specified experiments
 
 
 if __name__ == '__main__':
