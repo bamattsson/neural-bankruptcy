@@ -11,8 +11,10 @@ class Algorithm(metaclass=ABCMeta):
         Args:
             samples (np.ndarray): X data, shape (n_samples, n_features)
             labels (np.ndarray): y data, shape (n_samples)
+        Returns:
+            fit_info (dict): information from the fit for later analysis
         """
-        pass
+        return None
 
     @abstractmethod
     def predict_proba(self, samples):
