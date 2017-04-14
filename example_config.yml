@@ -1,2 +1,12 @@
-DATA:
-    YEARS: [1]
+experiment:
+    type: 'single'  # 'single', 'cv'
+    np_random_seed: 42
+    years: [1]
+    shuffle_data: True
+    test_share: 0.1
+    algorithm: 'random_guess'
+algo_params:
+
+analysis:
+    print_results: ['classification_report', 'log_loss', 'accuracy', 'roc_auc']
+    show_roc: False

@@ -24,7 +24,7 @@ class Algorithm(metaclass=ABCMeta):
         Returns:
             proba (np.ndarray): Probability of belonging to a particular class, shape (n_samples, n_classes)
         """
-        proba = np.zeros(samples.shape[0])
+        proba = np.zeros((samples.shape[0], 2))
         return proba
 
     def predict(self, samples):
