@@ -34,3 +34,4 @@ class Algorithm(metaclass=ABCMeta):
         """
         predict_proba = self.predict_proba(samples)
         predict = np.argmax(predict_proba, axis=1)
+        return predict
