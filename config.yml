@@ -1,12 +1,13 @@
 experiment:
     type: 'single'  # 'single', 'cv'
-    np_random_seed: 42
+    np_random_seed: 52
     years: [1]
     shuffle_data: True
     test_share: 0.1
     algorithm: 'random_guess'
 algo_params:
+    param: 1
 
 analysis:
     print_results: ['classification_report', 'log_loss', 'accuracy', 'roc_auc']
-    show_roc: False
+    plot_roc: True

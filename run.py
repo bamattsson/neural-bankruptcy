@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn import metrics
-
+from random_guess import RandomGuessAlgorithm
 
 def load_yaml_and_save(yaml_path, run_path):
     with open(yaml_path, 'r') as f:
@@ -33,7 +33,7 @@ def load_dataset(year, shuffle=False):
 
 
 def show_results(results, print_results=[], plot_roc=False):
-    if len(print_results > 0):
+    if (len(print_results) > 0):
         print('Results:')
         for metric in print_results:
             if type(results[metric]) == dict:
@@ -45,6 +45,7 @@ def show_results(results, print_results=[], plot_roc=False):
 
     if plot_roc:
         plt.plot(results['roc_curve']['fpr'], results['roc_curve']['tpr'])
+        plt.show()
 
 
 def do_experiment_for_one_year(run_path, year, config):
@@ -66,8 +67,7 @@ def perform_one_experiment(X_train, Y_train, X_test, Y_test, config):
     """Performs one experiment with a given data set and generates results."""
     algorithm_name = config['experiment']['algorithm']
     if algorithm_name == 'random_guess':
-        pass
-        #  algorithm = RandomGuessAlgorithm(**config['algo_params'])
+        algorithm = RandomGuessAlgorithm()#**config['algo_params'])
     else:
         raise NotImplementedError('Algorithm {} is not an available option'.format(algorithm_name))
 
