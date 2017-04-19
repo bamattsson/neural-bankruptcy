@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from sklearn import metrics
 from random_guess import RandomGuessAlgorithm
 
+
 def load_yaml_and_save(yaml_path, run_path):
     with open(yaml_path, 'r') as f:
         config = yaml.load(f)
@@ -67,7 +68,7 @@ def perform_one_experiment(X_train, Y_train, X_test, Y_test, config):
     """Performs one experiment with a given data set and generates results."""
     algorithm_name = config['experiment']['algorithm']
     if algorithm_name == 'random_guess':
-        algorithm = RandomGuessAlgorithm()#**config['algo_params'])
+        algorithm = RandomGuessAlgorithm(**config['algo_params'])
     else:
         raise NotImplementedError('Algorithm {} is not an available option'.format(algorithm_name))
 

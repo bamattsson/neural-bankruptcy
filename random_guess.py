@@ -1,11 +1,11 @@
-from abc import ABCMeta
 import numpy as np
 from algorithm import Algorithm
 
+
 class RandomGuessAlgorithm(Algorithm):
 
-    def __init__(self):
-        pass
+    def __init__(self, param=None):
+        self.param = param
 
     def fit(self, samples, labels):
         """
@@ -16,9 +16,9 @@ class RandomGuessAlgorithm(Algorithm):
         fit_info (dict): information from the fit for later analysis
         """
         
-        #nbr_of_elements = labels.sum(axis=0)
-        #nbr_of_bankrupcies = labels.size
-        #self.class_proba = nbr_of_bankrupcies/nbr_of_elements
+        # nbr_of_elements = labels.sum(axis=0)
+        # nbr_of_bankrupcies = labels.size
+        # self.class_proba = nbr_of_bankrupcies/nbr_of_elements
         return None
 
     def predict_proba(self, samples):
