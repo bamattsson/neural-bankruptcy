@@ -1,3 +1,4 @@
+import sys
 import os
 import shutil
 import time
@@ -126,4 +127,10 @@ def main(yaml_path='./config.yml', run_name=None):
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        yaml_path = sys.argv[1]
+    except IndexError as e:
+        print('You have to specify the config.yaml to use as `python run.py example_config.yaml`')
+        print('Exiting.')
+        sys.exit()
+    main(yaml_path=yaml_path)
