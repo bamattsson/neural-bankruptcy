@@ -1,5 +1,6 @@
 experiment:
-    type: 'single'  # 'single', 'cv'
+    type: 'cv'  # 'single', 'cv'
+    n_folds: 10  # number of folds to use if cv is active
     np_random_seed: 52
     years: [1, 3, 5]
     shuffle_data: True

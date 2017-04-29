@@ -7,7 +7,7 @@ import pickle
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from sklearn import metrics
+from sklearn import metrics, model_selection
 from random_guess import RandomGuessAlgorithm
 
 
@@ -39,16 +39,22 @@ def show_results(results, year, print_results=[], plot_roc=False):
         print('\nResults for year {}:'.format(year))
         for metric in print_results:
             if type(results[metric]) == dict:
-                print('{}={:.2f}, std={:,f}'.format(metric, results[metric]['mean'], results[metric]['std']))
+                print('{}={:.2f}, std={:.2f}'.format(metric, results[metric]['mean'], results[metric]['std']))
             elif type(results[metric]) == str:
                 print(results[metric])
-            else:
+            elif isinstance(results[metric], float):
                 print('{}={:.2f}'.format(metric, results[metric]))
 
     if plot_roc:
         plt.figure(year)
         plt.title('roc curve year {}'.format(year))
-        plt.plot(results['roc_curve']['fpr'], results['roc_curve']['tpr'])
+        if type(results['roc_curve']['fpr']) == list:
+            # A CV run with multiple arrays
+            for fpr, tpr in zip(results['roc_curve']['fpr'], results['roc_curve']['tpr']):
+                plt.plot(fpr, tpr)
+        else:
+            # Not a CV run
+            plt.plot(results['roc_curve']['fpr'], results['roc_curve']['tpr'])
 
 
 def do_experiment_for_one_year(run_path, year, config):
@@ -103,11 +109,37 @@ def split_into_train_test(X, Y, test_share):
 
 
 def perform_cv_runs(X, Y, config):
-    # take data set
+    """Performs cv test for one year."""
     # split up in cv and perform runs
-    # concatenate results
-    # returns averages
-    raise NotImplementedError
+    cv_splitter = model_selection.KFold(n_splits=config['experiment']['n_folds'])
+    result_list = []
+    for train_index, test_index in cv_splitter.split(X):
+        X_train, X_test = X[train_index], X[test_index]
+        Y_train, Y_test = Y[train_index], Y[test_index]
+        results_one_experiment = perform_one_experiment(X_train, Y_train, X_test, Y_test, config)
+        result_list.append(results_one_experiment)
+
+    # Loop through all the generated results and save to one place
+    results = dict()
+    for metric in result_list[0]:
+        # Roc curve comes in a dict and are treated seperately
+        if type(result_list[0][metric]) == dict:
+            results[metric] = dict()
+            for submetric in result_list[0][metric]:
+                arrays = [result_from_cv[metric][submetric] for result_from_cv in result_list]
+                results[metric][submetric] = arrays
+        # Float values are saved as a list of all values but also as mean and std
+        elif isinstance(result_list[0][metric], float):
+            results[metric] = dict()
+            results[metric]['values'] = np.array([result_from_cv[metric] for result_from_cv in result_list])
+            results[metric]['mean'] = results[metric]['values'].mean()
+            results[metric]['std'] = results[metric]['values'].std()
+        # Other values are saved in lists
+        else:
+            value = [result_from_cv[metric] for result_from_cv in result_list]
+            results[metric] = value
+
+    return results
 
 
 def main(yaml_path='./config.yml', run_name=None):
