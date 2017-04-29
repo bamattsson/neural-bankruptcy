@@ -48,6 +48,7 @@ def show_results(results, year, print_results=[], plot_roc=False):
     if plot_roc:
         plt.figure(year)
         plt.title('roc curve year {}'.format(year))
+        plt.plot((0, 1), (0, 1), ls='--', c='k')
         if type(results['roc_curve']['fpr']) == list:
             # A CV run with multiple arrays
             for fpr, tpr in zip(results['roc_curve']['fpr'], results['roc_curve']['tpr']):
@@ -55,6 +56,8 @@ def show_results(results, year, print_results=[], plot_roc=False):
         else:
             # Not a CV run
             plt.plot(results['roc_curve']['fpr'], results['roc_curve']['tpr'])
+        plt.xlabel('False positive rate')
+        plt.ylabel('True positive rate')
 
 
 def do_experiment_for_one_year(run_path, year, config):
