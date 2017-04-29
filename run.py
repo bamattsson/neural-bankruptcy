@@ -34,9 +34,9 @@ def load_dataset(year, shuffle=False):
     return X, Y
 
 
-def show_results(results, print_results=[], plot_roc=False):
+def show_results(results, year, print_results=[], plot_roc=False):
     if (len(print_results) > 0):
-        print('Results:')
+        print('\nResults for year {}:'.format(year))
         for metric in print_results:
             if type(results[metric]) == dict:
                 print('{}={:.2f}, std={:,f}'.format(metric, results[metric]['mean'], results[metric]['std']))
@@ -46,8 +46,9 @@ def show_results(results, print_results=[], plot_roc=False):
                 print('{}={:.2f}'.format(metric, results[metric]))
 
     if plot_roc:
+        plt.figure(year)
+        plt.title('roc curve year {}'.format(year))
         plt.plot(results['roc_curve']['fpr'], results['roc_curve']['tpr'])
-        plt.show()
 
 
 def do_experiment_for_one_year(run_path, year, config):
@@ -62,7 +63,7 @@ def do_experiment_for_one_year(run_path, year, config):
     results_path = os.path.join(run_path, 'results_year{}.pkl'.format(year))
     with open(results_path, 'wb') as f:
         pickle.dump(results, f)
-    show_results(results, **config['analysis'])
+    show_results(results, year, **config['analysis'])
 
 
 def perform_one_experiment(X_train, Y_train, X_test, Y_test, config):
@@ -124,6 +125,10 @@ def main(yaml_path='./config.yml', run_name=None):
     np.random.seed(config['experiment']['np_random_seed'])
     for year in config['experiment']['years']:
         do_experiment_for_one_year(run_path, year, config)
+
+    # Show figures if the have been generated
+    if config['analysis']['plot_roc']:
+        plt.show()
 
 
 if __name__ == '__main__':
