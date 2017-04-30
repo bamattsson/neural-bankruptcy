@@ -27,7 +27,7 @@ def main(yaml_path='./config.yml', run_name=None):
     for year in config['experiment']['years']:
         do_experiment_for_one_year(run_path, year, config)
 
-    # Show figures if the have been generated
+    # Show figures if any have been generated
     if config['analysis']['plot_roc']:
         plt.show()
 
