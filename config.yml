@@ -2,7 +2,7 @@ experiment:
     type: 'cv'  # 'single', 'cv'
     n_folds: 10  # number of folds to use if cv is active
     np_random_seed: 52
-    years: [1, 3, 5]
+    years: [1]
     shuffle_data: True
     test_share: 0.1
     algorithm: 'random_guess'

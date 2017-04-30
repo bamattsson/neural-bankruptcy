@@ -11,53 +11,33 @@ from sklearn import metrics, model_selection
 from random_guess import RandomGuessAlgorithm
 
 
+def main(yaml_path='./config.yml', run_name=None):
+
+    # Create output directory where experiment is saved
+    if run_name is None:
+        run_name = time.strftime('%Y%m%d-%H%M', time.localtime())
+    run_path = os.path.join('./output', run_name)
+    if not os.path.exists(run_path):
+        os.makedirs(run_path)
+
+    config = load_yaml_and_save(yaml_path, run_path)
+
+    # Do the specified experiments
+    np.random.seed(config['experiment']['np_random_seed'])
+    for year in config['experiment']['years']:
+        do_experiment_for_one_year(run_path, year, config)
+
+    # Show figures if the have been generated
+    if config['analysis']['plot_roc']:
+        plt.show()
+
+
 def load_yaml_and_save(yaml_path, run_path):
     with open(yaml_path, 'r') as f:
         config = yaml.load(f)
     save_path = os.path.join(run_path, 'cfg.yml')
     shutil.copyfile(yaml_path, save_path)
     return config
-
-
-def load_dataset(year, shuffle=False):
-    """Loads chosen data set, mixes it and returns."""
-    main_path = './data/Dane/'
-    file_name = '{}year.csv'.format(year)
-    file_path = os.path.join(main_path, file_name)
-    df = pd.read_csv(file_path, na_values='?')
-    Y = df['class'].values
-    X = df.drop('class', axis=1).values
-    if shuffle:
-        shuffled_idx = np.random.permutation(len(Y))
-        X = X[shuffled_idx, :]
-        Y = Y[shuffled_idx]
-    return X, Y
-
-
-def show_results(results, year, print_results=[], plot_roc=False):
-    if (len(print_results) > 0):
-        print('\nResults for year {}:'.format(year))
-        for metric in print_results:
-            if type(results[metric]) == dict:
-                print('{}={:.2f}, std={:.2f}'.format(metric, results[metric]['mean'], results[metric]['std']))
-            elif type(results[metric]) == str:
-                print(results[metric])
-            elif isinstance(results[metric], float):
-                print('{}={:.2f}'.format(metric, results[metric]))
-
-    if plot_roc:
-        plt.figure(year)
-        plt.title('roc curve year {}'.format(year))
-        plt.plot((0, 1), (0, 1), ls='--', c='k')
-        if type(results['roc_curve']['fpr']) == list:
-            # A CV run with multiple arrays
-            for fpr, tpr in zip(results['roc_curve']['fpr'], results['roc_curve']['tpr']):
-                plt.plot(fpr, tpr)
-        else:
-            # Not a CV run
-            plt.plot(results['roc_curve']['fpr'], results['roc_curve']['tpr'])
-        plt.xlabel('False positive rate')
-        plt.ylabel('True positive rate')
 
 
 def do_experiment_for_one_year(run_path, year, config):
@@ -75,8 +55,33 @@ def do_experiment_for_one_year(run_path, year, config):
     show_results(results, year, **config['analysis'])
 
 
+def load_dataset(year, shuffle=False):
+    """Loads chosen data set, mixes it and returns."""
+    main_path = './data/Dane/'
+    file_name = '{}year.csv'.format(year)
+    file_path = os.path.join(main_path, file_name)
+    df = pd.read_csv(file_path, na_values='?')
+    Y = df['class'].values
+    X = df.drop('class', axis=1).values
+    if shuffle:
+        shuffled_idx = np.random.permutation(len(Y))
+        X = X[shuffled_idx, :]
+        Y = Y[shuffled_idx]
+    return X, Y
+
+
+def split_into_train_test(X, Y, test_share):
+    split_point = int(len(Y) * test_share)
+    X_test = X[:split_point, :]
+    X_train = X[split_point:, :]
+    Y_test = Y[:split_point]
+    Y_train = Y[split_point:]
+    return X_train, Y_train, X_test, Y_test
+
+
 def perform_one_experiment(X_train, Y_train, X_test, Y_test, config):
     """Performs one experiment with a given data set and generates results."""
+    # Creates the algorithm object
     algorithm_name = config['experiment']['algorithm']
     if algorithm_name == 'random_guess':
         algorithm = RandomGuessAlgorithm(**config['algo_params'])
@@ -100,15 +105,6 @@ def perform_one_experiment(X_train, Y_train, X_test, Y_test, config):
     results['classification_report'] = metrics.classification_report(Y_test, pred)
 
     return results
-
-
-def split_into_train_test(X, Y, test_share):
-    split_point = int(len(Y) * test_share)
-    X_test = X[:split_point, :]
-    X_train = X[split_point:, :]
-    Y_test = Y[:split_point]
-    Y_train = Y[split_point:]
-    return X_train, Y_train, X_test, Y_test
 
 
 def perform_cv_runs(X, Y, config):
@@ -145,25 +141,35 @@ def perform_cv_runs(X, Y, config):
     return results
 
 
-def main(yaml_path='./config.yml', run_name=None):
+def show_results(results, year, print_results=[], plot_roc=False):
+    """Print and plot the results that have been generated."""
+    # Print results
+    if (len(print_results) > 0):
+        print('\nResults for year {}:'.format(year))
+        for metric in print_results:
+            if type(results[metric]) == dict:
+                print('{}={:.2f}, std={:.2f}'.format(metric, results[metric]['mean'], results[metric]['std']))
+            elif type(results[metric]) == str:
+                print(results[metric])
+            elif isinstance(results[metric], float):
+                print('{}={:.2f}'.format(metric, results[metric]))
+            else:
+                print('{} cannot be printed.'.format(metric))
 
-    # Create output directory where experiment is saved
-    if run_name is None:
-        run_name = time.strftime('%Y%m%d-%H%M', time.localtime())
-    run_path = os.path.join('./output', run_name)
-    if not os.path.exists(run_path):
-        os.makedirs(run_path)
-
-    config = load_yaml_and_save(yaml_path, run_path)
-
-    # Do the specified experiments
-    np.random.seed(config['experiment']['np_random_seed'])
-    for year in config['experiment']['years']:
-        do_experiment_for_one_year(run_path, year, config)
-
-    # Show figures if the have been generated
-    if config['analysis']['plot_roc']:
-        plt.show()
+    # Plot results
+    if plot_roc:
+        plt.figure(year)
+        plt.title('roc curve year {}'.format(year))
+        plt.plot((0, 1), (0, 1), ls='--', c='k')
+        if type(results['roc_curve']['fpr']) == list:
+            # A CV run with multiple arrays
+            for fpr, tpr in zip(results['roc_curve']['fpr'], results['roc_curve']['tpr']):
+                plt.plot(fpr, tpr)
+        else:
+            # Not a CV run
+            plt.plot(results['roc_curve']['fpr'], results['roc_curve']['tpr'])
+        plt.xlabel('False positive rate')
+        plt.ylabel('True positive rate')
 
 
 if __name__ == '__main__':
