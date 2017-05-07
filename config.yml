@@ -9,6 +9,8 @@ experiment:
 imputer_params:
     strategy: 'mean'  # 'mean', 'min'
     new_features: '1-hot'  # False, 'sum', '1-hot'
+processor_params:
+    normalize: False
 algo_params:
     param: 1
 analysis:

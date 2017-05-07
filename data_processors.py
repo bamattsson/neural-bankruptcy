@@ -1,7 +1,26 @@
+from abc import ABCMeta, abstractmethod
 import numpy as np
 
 
-class Imputer():
+class DataProcessor(metaclass=ABCMeta):
+    """Abstract data processor class."""
+
+    @abstractmethod
+    def fit(self, data):
+        """Fits the internal DataProcessor values to the data."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def transform(self, data):
+        """Transforms the data with the DataProcessor."""
+        raise NotImplementedError
+
+    def fit_transform(self, data):
+        self.fit(data)
+        return self.transform(data)
+
+
+class Imputer(DataProcessor):
     def __init__(self, strategy, new_features=False):
         """Initialize object.
 
@@ -39,9 +58,21 @@ class Imputer():
             data[i, isnan] = self.imputing_values[isnan]
 
         out_data = np.concatenate((data, extra_features), axis=1)
-
         return out_data
 
-    def fit_transform(self, data):
-        self.fit(data)
-        return self.transform(data)
+
+class Processor(DataProcessor):
+
+    def __init__(self, normalize):
+        self.normalize = normalize
+
+    def fit(self, data):
+        if self.normalize:
+            self.mean = np.nanmean(data, axis=0)
+            self.std = np.nanstd(data, axis=0)
+
+    def transform(self, data):
+        data = np.copy(data)
+        if self.normalize:
+            data = (data - self.mean) / self.std
+        return data
