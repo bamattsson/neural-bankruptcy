@@ -9,6 +9,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn import metrics, model_selection
 from random_guess import RandomGuessAlgorithm
+from imputer import Imputer
 
 
 def main(yaml_path='./config.yml', run_name=None):
@@ -87,6 +88,11 @@ def perform_one_experiment(X_train, Y_train, X_test, Y_test, config):
         algorithm = RandomGuessAlgorithm(**config['algo_params'])
     else:
         raise NotImplementedError('Algorithm {} is not an available option'.format(algorithm_name))
+
+    # Prepare data
+    imputer = Imputer(**config['imputer_params'])
+    X_train = imputer.fit_transform(X_train)
+    X_test = imputer.transform(X_test)
 
     # Perform experiment
     results = dict()
