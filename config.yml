@@ -1,5 +1,5 @@
 experiment:
-    type: 'cv'  # 'single', 'cv'
+    type: 'single'  # 'single', 'cv'
     n_folds: 10  # number of folds to use if cv is active
     np_random_seed: 52
     years: [1]
@@ -13,8 +13,7 @@ processor_params:
     normalize: False
 algo_params:  # parameters for multilayer perceptron
     batch_iterator_type: 'oversample'  # 'normal', 'oversample'
-    n_hidden_1: 10
-    n_hidden_2: 10
+    n_hidden: [10, 10]
     num_epochs: 5
     batch_size: 10
 analysis:

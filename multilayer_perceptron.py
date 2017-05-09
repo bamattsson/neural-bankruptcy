@@ -6,11 +6,10 @@ from algorithm import Algorithm
 
 class MultilayerPerceptron(Algorithm):
 
-    def __init__(self, n_input, n_hidden_1, n_hidden_2, num_epochs, batch_size, batch_iterator_type):
+    def __init__(self, n_input, n_hidden, num_epochs, batch_size, batch_iterator_type):
         # Structure of model
         self.n_input = n_input
-        self.n_hidden_1 = n_hidden_1
-        self.n_hidden_2 = n_hidden_2
+        self.n_hidden = n_hidden
         self.n_class = 2
         # Training parameters
         self.num_epochs = num_epochs
@@ -57,23 +56,24 @@ class MultilayerPerceptron(Algorithm):
         y_input = tf.placeholder(tf.int32, shape=(None))
 
         # Variables
-        W_layer_1 = tf.Variable(tf.truncated_normal((self.n_input, self.n_hidden_1), stddev=0.1), name='W_1_layer')
-        b_layer_1 = tf.Variable(tf.truncated_normal([self.n_hidden_1], stddev=0.1), name='b_1_layer')
-        W_layer_2 = tf.Variable(tf.truncated_normal((self.n_hidden_1, self.n_hidden_2), stddev=0.1), name='W_2_layer')
-        b_layer_2 = tf.Variable(tf.truncated_normal([self.n_hidden_2], stddev=0.1), name='b_2_layer')
-        W_layer_o = tf.Variable(tf.truncated_normal((self.n_hidden_2, self.n_class), stddev=0.1), name='W_out_layer')
-        b_layer_o = tf.Variable(tf.truncated_normal([self.n_class], stddev=0.1), name='b_out_layer')
-
-        # Model
-        # TODO: we could make number of layers a hyperparameter pretty easily
+        # Build the fully connected layers
         # TODO: add dropout
-        layer_1 = tf.add(tf.matmul(x_input, W_layer_1), b_layer_1)
-        layer_1 = tf.nn.relu(layer_1)  # TODO: make this optional
+        neurons = x_input
+        for i in range(len(self.n_hidden) + 1):
+            input_dim = self.n_input if i == 0 else self.n_hidden[i - 1]
+            output_dim = self.n_class if i == len(self.n_hidden) else self.n_hidden[i]
+            layer_name = i + 1 if i < len(self.n_hidden) else 'out'
+            # Create weights
+            W = tf.Variable(tf.truncated_normal([input_dim, output_dim], stddev=0.1),
+                    name='W_{}_layer'.format(layer_name))
+            b = tf.Variable(tf.truncated_normal([output_dim], stddev=0.1),
+                    name='b_{}_layer'.format(layer_name))
+            # Connect nodes
+            neurons = tf.add(tf.matmul(neurons, W), b)
+            if i < len(self.n_hidden):
+                neurons = tf.nn.relu(neurons)  # TODO: make this optional
 
-        layer_2 = tf.add(tf.matmul(layer_1, W_layer_2), b_layer_2)
-        layer_2 = tf.nn.relu(layer_2)  # TODO: make this optional
-
-        logits = tf.add(tf.matmul(layer_2, W_layer_o), b_layer_o)
+        logits = neurons
         proba = tf.nn.softmax(logits)
 
         # Loss and Accuracy
