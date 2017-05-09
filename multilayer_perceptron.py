@@ -6,7 +6,7 @@ from algorithm import Algorithm
 
 class MultilayerPerceptron(Algorithm):
 
-    def __init__(self, n_input, n_hidden, num_epochs, batch_size, batch_iterator_type):
+    def __init__(self, n_input, n_hidden, num_epochs, batch_size, batch_iterator_type, tf_seed):
         # Structure of model
         self.n_input = n_input
         self.n_hidden = n_hidden
@@ -18,12 +18,12 @@ class MultilayerPerceptron(Algorithm):
 
         # Create TF graph and session
         tf.reset_default_graph()
+        tf.set_random_seed(tf_seed)
         self.graph_nodes = self._get_graph()
 
         self.sess = tf.Session()
         self.sess.run([tf.global_variables_initializer()])
         # TODO: add early stopping with tf.train.Saver
-        # TODO: add tf seed
 
     def fit(self, samples, labels):
         """Train the model with the samples and lables provided according to the parameters of the model."""

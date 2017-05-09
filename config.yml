@@ -12,10 +12,11 @@ imputer_params:
 processor_params:
     normalize: False
 algo_params:  # parameters for multilayer perceptron
+    tf_seed: 37050
     batch_iterator_type: 'oversample'  # 'normal', 'oversample'
     n_hidden: [10, 10]
     num_epochs: 5
     batch_size: 10
 analysis:
     print_results: ['log_loss', 'accuracy', 'roc_auc']
-    plot_roc: True
+    plot_roc: False
