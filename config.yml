@@ -8,15 +8,18 @@ experiment:
     algorithm: 'multilayer_perceptron'  # 'random_guess', multilayer_perceptron'
 imputer_params:
     strategy: 'mean'  # 'mean', 'min'
-    new_features: '1-hot'  # False, 'sum', '1-hot'
+    new_features: 'sum'  # False, 'sum', '1-hot'
 processor_params:
-    normalize: False
+    normalize: True
 algo_params:  # parameters for multilayer perceptron
     tf_seed: 37050
+    dev_share: 0.1
     batch_iterator_type: 'oversample'  # 'normal', 'oversample'
     n_hidden: [10, 10]
-    num_epochs: 5
-    batch_size: 10
+    num_epochs: 80
+    batch_size: 100
+    evaluate_every_n_steps: 5
+    plot_training: True
 analysis:
     print_results: ['log_loss', 'accuracy', 'roc_auc']
     plot_roc: False

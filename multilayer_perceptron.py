@@ -1,20 +1,26 @@
 import numpy as np
 import tensorflow as tf
+import matplotlib.pyplot as plt
 
 from algorithm import Algorithm
+from utils import split_dataset
 
 
 class MultilayerPerceptron(Algorithm):
 
-    def __init__(self, n_input, n_hidden, num_epochs, batch_size, batch_iterator_type, tf_seed):
+    def __init__(self, n_input, n_hidden, dev_share, num_epochs, batch_size, batch_iterator_type,
+            evaluate_every_n_steps, plot_training, tf_seed):
         # Structure of model
         self.n_input = n_input
         self.n_hidden = n_hidden
         self.n_class = 2
         # Training parameters
+        self.dev_share = dev_share
         self.num_epochs = num_epochs
         self.batch_size = batch_size
         self.batch_iterator_type = batch_iterator_type
+        self.evaluate_every_n_steps = evaluate_every_n_steps
+        self.plot_training = plot_training
 
         # Create TF graph and session
         tf.reset_default_graph()
@@ -28,6 +34,10 @@ class MultilayerPerceptron(Algorithm):
     def fit(self, samples, labels):
         """Train the model with the samples and lables provided according to the parameters of the model."""
 
+        # Split into train and dev
+        x_train, y_train, x_dev, y_dev = split_dataset(samples, labels, self.dev_share)
+
+        # Create batch iterator
         if self.batch_iterator_type == 'normal':
             batch_iter = _batch_iter
         elif self.batch_iterator_type == 'oversample':
@@ -35,14 +45,33 @@ class MultilayerPerceptron(Algorithm):
         else:
             raise ValueError('{} is not a valid batch_iterator_type'.format(self.batch_iterator_type))
 
-        for x, y in batch_iter(samples, labels, self.num_epochs, self.batch_size):
+        # Train model
+        train_batch_nr = []
+        train_loss_val = []
+        dev_batch_nr = []
+        dev_loss_val = []
+        for i, (x, y) in enumerate(batch_iter(x_train, y_train, self.num_epochs, self.batch_size)):
             # Train
             feed_dict = {
                     self.graph_nodes['x_input']: x,
                     self.graph_nodes['y_input']: y
                     }
             _, loss_val = self.sess.run([self.graph_nodes['optimize'], self.graph_nodes['loss']], feed_dict=feed_dict)
-            # TODO: evaluate on dev set
+            train_batch_nr.append(i)
+            train_loss_val.append(loss_val)
+            if i % self.evaluate_every_n_steps == 0:
+                feed_dict = {
+                        self.graph_nodes['x_input']: x_dev,
+                        self.graph_nodes['y_input']: y_dev
+                        }
+                loss_val = self.sess.run(self.graph_nodes['loss'], feed_dict=feed_dict)
+                dev_batch_nr.append(i)
+                dev_loss_val.append(loss_val)
+
+        if self.plot_training:
+            plt.plot(train_batch_nr, train_loss_val)
+            plt.plot(dev_batch_nr, dev_loss_val)
+            plt.show()
 
     def predict_proba(self, samples):
         """Make probability predictions with the trained model."""

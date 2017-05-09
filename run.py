@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn import metrics, model_selection
+from utils import split_dataset
 from random_guess import RandomGuessAlgorithm
 from multilayer_perceptron import MultilayerPerceptron
 from data_processors import Imputer, Processor
@@ -46,7 +47,7 @@ def do_experiment_for_one_year(run_path, year, config):
     """Performs the specified experiments for one year."""
     X, Y = load_dataset(year, shuffle=config['experiment']['shuffle_data'])
     if config['experiment']['type'] == 'single':
-        X_train, Y_train, X_test, Y_test = split_into_train_test(X, Y, config['experiment']['test_share'])
+        X_train, Y_train, X_test, Y_test = split_dataset(X, Y, config['experiment']['test_share'])
         results = perform_one_experiment(X_train, Y_train, X_test, Y_test, config)
     elif config['experiment']['type'] == 'cv':
         results = perform_cv_runs(X, Y, config)
@@ -70,15 +71,6 @@ def load_dataset(year, shuffle=False):
         X = X[shuffled_idx, :]
         Y = Y[shuffled_idx]
     return X, Y
-
-
-def split_into_train_test(X, Y, test_share):
-    split_point = int(len(Y) * test_share)
-    X_test = X[:split_point, :]
-    X_train = X[split_point:, :]
-    Y_test = Y[:split_point]
-    Y_train = Y[split_point:]
-    return X_train, Y_train, X_test, Y_test
 
 
 def perform_one_experiment(X_train, Y_train, X_test, Y_test, config):
