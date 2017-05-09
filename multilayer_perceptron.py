@@ -4,28 +4,52 @@ import tensorflow as tf
 from algorithm import Algorithm
 
 
-class MultiLayerPerceptron(Algorithm):
+class MultilayerPerceptron(Algorithm):
 
-    def __init__(self, n_input, n_hidden_1, n_hidden_2, num_epochs):
+    def __init__(self, n_input, n_hidden_1, n_hidden_2, num_epochs, batch_size, batch_iterator_type):
+        # Structure of model
         self.n_input = n_input
         self.n_hidden_1 = n_hidden_1
         self.n_hidden_2 = n_hidden_2
-
         self.n_class = 2
+        # Training parameters
+        self.num_epochs = num_epochs
+        self.batch_size = batch_size
+        self.batch_iterator_type = batch_iterator_type
 
         # Create TF graph and session
         tf.reset_default_graph()
         self.graph_nodes = self._get_graph()
 
-        sess = tf.Session()
-        sess.run([tf.global_variables_initializer()])
+        self.sess = tf.Session()
+        self.sess.run([tf.global_variables_initializer()])
         # TODO: add early stopping with tf.train.Saver
+        # TODO: add tf seed
 
     def fit(self, samples, labels):
-        pass  # TODO
+        """Train the model with the samples and lables provided according to the parameters of the model."""
 
-    def predict(self, samples):
-        pass  # TODO
+        if self.batch_iterator_type == 'normal':
+            batch_iter = _batch_iter
+        elif self.batch_iterator_type == 'oversample':
+            batch_iter = _oversampling_batch_iter
+        else:
+            raise ValueError('{} is not a valid batch_iterator_type'.format(self.batch_iterator_type))
+
+        for x, y in batch_iter(samples, labels, self.num_epochs, self.batch_size):
+            # Train
+            feed_dict = {
+                    self.graph_nodes['x_input']: x,
+                    self.graph_nodes['y_input']: y
+                    }
+            _, loss_val = self.sess.run([self.graph_nodes['optimize'], self.graph_nodes['loss']], feed_dict=feed_dict)
+            # TODO: evaluate on dev set
+
+    def predict_proba(self, samples):
+        """Make probability predictions with the trained model."""
+        feed_dict = {self.graph_nodes['x_input']: samples}  # Small model -> no need to loop over the samples
+        proba = self.sess.run(self.graph_nodes['proba'], feed_dict=feed_dict)
+        return proba
 
     def _get_graph(self):
         # Create placeholders for input
@@ -34,14 +58,15 @@ class MultiLayerPerceptron(Algorithm):
 
         # Variables
         W_layer_1 = tf.Variable(tf.truncated_normal((self.n_input, self.n_hidden_1), stddev=0.1), name='W_1_layer')
-        b_layer_1 = tf.Variable(tf.truncated_normal((self.n_hidden_1), stddev=0.1), name='b_1_layer')
+        b_layer_1 = tf.Variable(tf.truncated_normal([self.n_hidden_1], stddev=0.1), name='b_1_layer')
         W_layer_2 = tf.Variable(tf.truncated_normal((self.n_hidden_1, self.n_hidden_2), stddev=0.1), name='W_2_layer')
-        b_layer_2 = tf.Variable(tf.truncated_normal((self.n_hidden_2), stddev=0.1), name='b_2_layer')
+        b_layer_2 = tf.Variable(tf.truncated_normal([self.n_hidden_2], stddev=0.1), name='b_2_layer')
         W_layer_o = tf.Variable(tf.truncated_normal((self.n_hidden_2, self.n_class), stddev=0.1), name='W_out_layer')
-        b_layer_o = tf.Variable(tf.truncated_normal((self.n_class), stddev=0.1), name='b_out_layer')
+        b_layer_o = tf.Variable(tf.truncated_normal([self.n_class], stddev=0.1), name='b_out_layer')
 
         # Model
         # TODO: we could make number of layers a hyperparameter pretty easily
+        # TODO: add dropout
         layer_1 = tf.add(tf.matmul(x_input, W_layer_1), b_layer_1)
         layer_1 = tf.nn.relu(layer_1)  # TODO: make this optional
 
@@ -49,20 +74,21 @@ class MultiLayerPerceptron(Algorithm):
         layer_2 = tf.nn.relu(layer_2)  # TODO: make this optional
 
         logits = tf.add(tf.matmul(layer_2, W_layer_o), b_layer_o)
-        prob = tf.nn.softmax(logits)
+        proba = tf.nn.softmax(logits)
 
         # Loss and Accuracy
         loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=y_input, logits=logits))
-        correct_predictions = tf.equal(tf.argmax(logits, 1), y_input)
+        correct_predictions = tf.equal(tf.cast(tf.argmax(logits, 1), tf.int32), y_input)
         accuracy = tf.reduce_mean(tf.cast(correct_predictions, 'float'))
 
         # Train operation
-        optimize = tf.train.AdamOptimizer(learning_rate=self.learning_rate).minimize(loss)
+        # TODO: add so that we could change learning rate?
+        optimize = tf.train.AdamOptimizer().minimize(loss)
 
         # Save important nodes to dict and return
         graph = {'x_input': x_input,
                 'y_input': y_input,
-                'prob': prob,
+                'proba': proba,
                 'loss': loss,
                 'accuracy': accuracy,
                 'optimize': optimize}

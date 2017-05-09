@@ -5,14 +5,18 @@ experiment:
     years: [1]
     shuffle_data: True
     test_share: 0.1
-    algorithm: 'random_guess'
+    algorithm: 'multilayer_perceptron'  # 'random_guess', multilayer_perceptron'
 imputer_params:
     strategy: 'mean'  # 'mean', 'min'
     new_features: '1-hot'  # False, 'sum', '1-hot'
 processor_params:
     normalize: False
-algo_params:
-    param: 1
+algo_params:  # parameters for multilayer perceptron
+    batch_iterator_type: 'oversample'  # 'normal', 'oversample'
+    n_hidden_1: 10
+    n_hidden_2: 10
+    num_epochs: 5
+    batch_size: 10
 analysis:
     print_results: ['log_loss', 'accuracy', 'roc_auc']
-    plot_roc: False
+    plot_roc: True

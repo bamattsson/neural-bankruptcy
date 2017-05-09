@@ -9,6 +9,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn import metrics, model_selection
 from random_guess import RandomGuessAlgorithm
+from multilayer_perceptron import MultilayerPerceptron
 from data_processors import Imputer, Processor
 
 
@@ -82,13 +83,6 @@ def split_into_train_test(X, Y, test_share):
 
 def perform_one_experiment(X_train, Y_train, X_test, Y_test, config):
     """Performs one experiment with a given data set and generates results."""
-    # Creates the algorithm object
-    algorithm_name = config['experiment']['algorithm']
-    if algorithm_name == 'random_guess':
-        algorithm = RandomGuessAlgorithm(**config['algo_params'])
-    else:
-        raise NotImplementedError('Algorithm {} is not an available option'.format(algorithm_name))
-
     # Prepare data
     imputer = Imputer(**config['imputer_params'])
     X_train = imputer.fit_transform(X_train)
@@ -96,6 +90,15 @@ def perform_one_experiment(X_train, Y_train, X_test, Y_test, config):
     processor = Processor(**config['processor_params'])
     X_train = processor.fit_transform(X_train)
     X_test = processor.transform(X_test)
+
+    # Creates the algorithm object
+    algorithm_name = config['experiment']['algorithm']
+    if algorithm_name == 'random_guess':
+        algorithm = RandomGuessAlgorithm()
+    elif algorithm_name == 'multilayer_perceptron':
+        algorithm = MultilayerPerceptron(n_input=X_train.shape[1], **config['algo_params'])
+    else:
+        raise NotImplementedError('Algorithm {} is not an available option'.format(algorithm_name))
 
     # Perform experiment
     results = dict()
@@ -106,12 +109,12 @@ def perform_one_experiment(X_train, Y_train, X_test, Y_test, config):
     # Calculate and save results
     results['log_loss'] = metrics.log_loss(Y_test, pred_proba[:, 1])
     results['accuracy'] = metrics.accuracy_score(Y_test, pred)
-    results['recall'] = metrics.recall_score(Y_test, pred)
-    results['precision'] = metrics.precision_score(Y_test, pred)
+    results['recall'] = metrics.recall_score(Y_test, pred, labels=[0, 1])
+    results['precision'] = metrics.precision_score(Y_test, pred, labels=[0, 1])
     fpr, tpr, thresholds = metrics.roc_curve(Y_test, pred_proba[:, 1])
     results['roc_curve'] = {'fpr': fpr, 'tpr': tpr, 'thresholds': thresholds}
     results['roc_auc'] = metrics.auc(fpr, tpr)
-    results['classification_report'] = metrics.classification_report(Y_test, pred)
+    results['classification_report'] = metrics.classification_report(Y_test, pred, labels=[0, 1])
 
     return results
 

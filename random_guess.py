@@ -4,8 +4,8 @@ from algorithm import Algorithm
 
 class RandomGuessAlgorithm(Algorithm):
 
-    def __init__(self, param=None):
-        self.param = param
+    def __init__(self):
+        pass
 
     def fit(self, samples, labels):
         """
@@ -15,7 +15,6 @@ class RandomGuessAlgorithm(Algorithm):
         Returns:
         fit_info (dict): information from the fit for later analysis
         """
-        
         # nbr_of_elements = labels.sum(axis=0)
         # nbr_of_bankrupcies = labels.size
         # self.class_proba = nbr_of_bankrupcies/nbr_of_elements
@@ -28,8 +27,8 @@ class RandomGuessAlgorithm(Algorithm):
         Returns:
         proba (np.ndarray): Probability of belonging to a particular class, shape (n_samples,n_classes)
         """
-        
+
         proba = np.zeros((samples.shape[0], 2))
-        proba[:,0] = np.random.rand(samples.shape[0])
-        proba[:,1] = np.ones(samples.shape[0]) - proba[:,0]
+        proba[:, 0] = np.random.rand(samples.shape[0])
+        proba[:, 1] = np.ones(samples.shape[0]) - proba[:, 0]
         return proba
