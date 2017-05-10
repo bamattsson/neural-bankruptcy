@@ -8,8 +8,11 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn import metrics, model_selection
+from utils import split_dataset
 from random_guess import RandomGuessAlgorithm
 from sklearn.ensemble import RandomForestClassifier
+from multilayer_perceptron import MultilayerPerceptron
+from data_processors import Imputer, Processor
 
 def main(yaml_path='./config.yml', run_name=None):
 
@@ -44,7 +47,7 @@ def do_experiment_for_one_year(run_path, year, config):
     """Performs the specified experiments for one year."""
     X, Y = load_dataset(year, shuffle=config['experiment']['shuffle_data'])
     if config['experiment']['type'] == 'single':
-        X_train, Y_train, X_test, Y_test = split_into_train_test(X, Y, config['experiment']['test_share'])
+        X_train, Y_train, X_test, Y_test = split_dataset(X, Y, config['experiment']['test_share'])
         results = perform_one_experiment(X_train, Y_train, X_test, Y_test, config)
     elif config['experiment']['type'] == 'cv':
         results = perform_cv_runs(X, Y, config)
@@ -70,17 +73,16 @@ def load_dataset(year, shuffle=False):
     return X, Y
 
 
-def split_into_train_test(X, Y, test_share):
-    split_point = int(len(Y) * test_share)
-    X_test = X[:split_point, :]
-    X_train = X[split_point:, :]
-    Y_test = Y[:split_point]
-    Y_train = Y[split_point:]
-    return X_train, Y_train, X_test, Y_test
-
-
 def perform_one_experiment(X_train, Y_train, X_test, Y_test, config):
     """Performs one experiment with a given data set and generates results."""
+    # Prepare data
+    imputer = Imputer(**config['imputer_params'])
+    X_train = imputer.fit_transform(X_train)
+    X_test = imputer.transform(X_test)
+    processor = Processor(**config['processor_params'])
+    X_train = processor.fit_transform(X_train)
+    X_test = processor.transform(X_test)
+
     # Creates the algorithm object
     algorithm_name = config['experiment']['algorithm']
     if algorithm_name == 'random_guess':
@@ -88,6 +90,9 @@ def perform_one_experiment(X_train, Y_train, X_test, Y_test, config):
     elif algorithm_name == 'rf':
         algorithm = RandomForestClassifier(**config['algo_params'])
         #algorithm = RandomForestClassifier(n_estimators=10, max_depth=None, min_samples_split=2, random_state=0)
+        #algorithm = RandomGuessAlgorithm()
+    elif algorithm_name == 'multilayer_perceptron':
+        algorithm = MultilayerPerceptron(n_input=X_train.shape[1], **config['algo_params'])
     else:
         raise NotImplementedError('Algorithm {} is not an available option'.format(algorithm_name))
 
@@ -108,12 +113,12 @@ def perform_one_experiment(X_train, Y_train, X_test, Y_test, config):
     # Calculate and save results
     results['log_loss'] = metrics.log_loss(Y_test, pred_proba[:, 1])
     results['accuracy'] = metrics.accuracy_score(Y_test, pred)
-    results['recall'] = metrics.recall_score(Y_test, pred)
-    results['precision'] = metrics.precision_score(Y_test, pred)
+    results['recall'] = metrics.recall_score(Y_test, pred, labels=[0, 1])
+    results['precision'] = metrics.precision_score(Y_test, pred, labels=[0, 1])
     fpr, tpr, thresholds = metrics.roc_curve(Y_test, pred_proba[:, 1])
     results['roc_curve'] = {'fpr': fpr, 'tpr': tpr, 'thresholds': thresholds}
     results['roc_auc'] = metrics.auc(fpr, tpr)
-    results['classification_report'] = metrics.classification_report(Y_test, pred)
+    results['classification_report'] = metrics.classification_report(Y_test, pred, labels=[0, 1])
 
     return results
 
