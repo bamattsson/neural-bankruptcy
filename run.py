@@ -9,7 +9,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn import metrics, model_selection
 from random_guess import RandomGuessAlgorithm
-
+from sklearn.ensemble import RandomForestClassifier
 
 def main(yaml_path='./config.yml', run_name=None):
 
@@ -85,12 +85,23 @@ def perform_one_experiment(X_train, Y_train, X_test, Y_test, config):
     algorithm_name = config['experiment']['algorithm']
     if algorithm_name == 'random_guess':
         algorithm = RandomGuessAlgorithm(**config['algo_params'])
+    elif algorithm_name == 'rf':
+        algorithm = RandomForestClassifier(**config['algo_params'])
+        #algorithm = RandomForestClassifier(n_estimators=10, max_depth=None, min_samples_split=2, random_state=0)
     else:
         raise NotImplementedError('Algorithm {} is not an available option'.format(algorithm_name))
 
     # Perform experiment
+
+    #impute here?
+    X_train = np.nan_to_num(X_train)
+
     results = dict()
     results['fit_info'] = algorithm.fit(X_train, Y_train)
+
+    #impute here?
+    X_test = np.nan_to_num(X_test)
+
     pred_proba = algorithm.predict_proba(X_test)
     pred = np.argmax(pred_proba, axis=1)
 
