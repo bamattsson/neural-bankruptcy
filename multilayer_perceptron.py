@@ -104,8 +104,7 @@ class MultilayerPerceptron(Algorithm):
             # Create weights
             W = tf.Variable(tf.truncated_normal([input_dim, output_dim], stddev=0.1),
                     name='W_{}_layer'.format(layer_name))
-            b = tf.Variable(tf.truncated_normal([output_dim], stddev=0.1),
-                    name='b_{}_layer'.format(layer_name))
+            b = tf.Variable(0.1 * np.ones(output_dim, dtype=np.float32), name='b_{}_layer'.format(layer_name))
             l2_loss += tf.nn.l2_loss(W)
             # Connect nodes
             neurons = tf.add(tf.matmul(neurons, W), b)
