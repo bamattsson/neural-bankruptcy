@@ -96,7 +96,7 @@ class MultilayerPerceptron(Algorithm):
         # Variables
         # Build the fully connected layers
         neurons = x_input
-        l2_loss = tf.constant(0.)
+        l2_norm = tf.constant(0.)
         for i in range(len(self.n_hidden) + 1):
             input_dim = self.n_input if i == 0 else self.n_hidden[i - 1]
             output_dim = self.n_class if i == len(self.n_hidden) else self.n_hidden[i]
@@ -105,7 +105,7 @@ class MultilayerPerceptron(Algorithm):
             W = tf.Variable(tf.truncated_normal([input_dim, output_dim], stddev=0.1),
                     name='W_{}_layer'.format(layer_name))
             b = tf.Variable(0.1 * np.ones(output_dim, dtype=np.float32), name='b_{}_layer'.format(layer_name))
-            l2_loss += tf.nn.l2_loss(W)
+            l2_norm += tf.nn.l2_loss(W)
             # Connect nodes
             neurons = tf.add(tf.matmul(neurons, W), b)
             if i < len(self.n_hidden):  # True if not last (output) layer
@@ -117,7 +117,7 @@ class MultilayerPerceptron(Algorithm):
 
         # Loss and Accuracy
         loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=y_input, logits=logits))
-        regularized_loss = loss + self.l2_reg_factor * l2_loss
+        regularized_loss = loss + self.l2_reg_factor * l2_norm
         correct_predictions = tf.equal(tf.cast(tf.argmax(logits, 1), tf.int32), y_input)
         accuracy = tf.reduce_mean(tf.cast(correct_predictions, 'float'))
 
