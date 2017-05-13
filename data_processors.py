@@ -39,6 +39,8 @@ class Imputer(DataProcessor):
             self.imputing_values = np.nanmin(data, axis=0)
         else:
             raise ValueError('{} is not a valid value for `strategy`'.format(self.strategy))
+        if self.new_features == '1-hot':
+            self.contains_nan = np.any(np.isnan(data), axis=0)
 
     def transform(self, data):
         # Add new features from nan values
@@ -47,7 +49,7 @@ class Imputer(DataProcessor):
         elif self.new_features == 'sum':
             extra_features = np.isnan(data).sum(axis=1)[:, None]
         elif self.new_features == '1-hot':
-            extra_features = np.isnan(data)
+            extra_features = np.isnan(data)[:, self.contains_nan]
             extra_features = np.atleast_2d(extra_features)
         else:
             raise ValueError('{} is not a valid value for `new_features`'.format(self.new_features))
