@@ -1,25 +1,27 @@
 experiment:
-    type: 'single'  # 'single', 'cv'
+    type: 'cv'  # 'single', 'cv'
     n_folds: 10  # number of folds to use if cv is active
     np_random_seed: 52
-    years: [1]
+    years: [1, 2, 3, 4, 5]
     shuffle_data: True
     test_share: 0.1
     algorithm: 'multilayer_perceptron'  # 'random_guess', multilayer_perceptron'
 imputer_params:
     strategy: 'mean'  # 'mean', 'min'
-    new_features: 'sum'  # False, 'sum', '1-hot'
+    new_features: '1-hot'  # False, 'sum', '1-hot'
 processor_params:
     normalize: True
 algo_params:  # parameters for multilayer perceptron
     tf_seed: 37050
-    dev_share: 0.1
+    dev_share: 0.0
     batch_iterator_type: 'oversample'  # 'normal', 'oversample'
-    n_hidden: [10, 10]
-    num_epochs: 80
-    batch_size: 100
-    evaluate_every_n_steps: 5
-    plot_training: True
+    n_hidden: [100, 50]
+    dropout_keep_prob: 0.5
+    l2_reg_factor: 0.001
+    num_epochs: 100
+    batch_size: 50
+    evaluate_every_n_steps: 10
+    plot_training: False
 analysis:
     print_results: ['log_loss', 'accuracy', 'roc_auc']
-    plot_roc: False
+    plot_roc: True

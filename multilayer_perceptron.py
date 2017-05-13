@@ -8,11 +8,13 @@ from utils import split_dataset
 
 class MultilayerPerceptron(Algorithm):
 
-    def __init__(self, n_input, n_hidden, dev_share, num_epochs, batch_size, batch_iterator_type,
-            evaluate_every_n_steps, plot_training, tf_seed):
+    def __init__(self, n_input, n_hidden, dropout_keep_prob, l2_reg_factor, dev_share, num_epochs, batch_size,
+            batch_iterator_type, evaluate_every_n_steps, plot_training, tf_seed):
         # Structure of model
         self.n_input = n_input
         self.n_hidden = n_hidden
+        self.dropout_keep_prob = dropout_keep_prob
+        self.l2_reg_factor = l2_reg_factor
         self.n_class = 2
         # Training parameters
         self.dev_share = dev_share
@@ -54,7 +56,8 @@ class MultilayerPerceptron(Algorithm):
             # Train
             feed_dict = {
                     self.graph_nodes['x_input']: x,
-                    self.graph_nodes['y_input']: y
+                    self.graph_nodes['y_input']: y,
+                    self.graph_nodes['dropout_keep_prob']: self.dropout_keep_prob
                     }
             _, loss_val = self.sess.run([self.graph_nodes['optimize'], self.graph_nodes['loss']], feed_dict=feed_dict)
             train_batch_nr.append(i)
@@ -62,7 +65,8 @@ class MultilayerPerceptron(Algorithm):
             if i % self.evaluate_every_n_steps == 0:
                 feed_dict = {
                         self.graph_nodes['x_input']: x_dev,
-                        self.graph_nodes['y_input']: y_dev
+                        self.graph_nodes['y_input']: y_dev,
+                        self.graph_nodes['dropout_keep_prob']: 1.
                         }
                 loss_val = self.sess.run(self.graph_nodes['loss'], feed_dict=feed_dict)
                 dev_batch_nr.append(i)
@@ -75,19 +79,24 @@ class MultilayerPerceptron(Algorithm):
 
     def predict_proba(self, samples):
         """Make probability predictions with the trained model."""
-        feed_dict = {self.graph_nodes['x_input']: samples}  # Small model -> no need to loop over the samples
+        # Small model -> no need to loop over the samples
+        feed_dict = {
+                self.graph_nodes['x_input']: samples,
+                self.graph_nodes['dropout_keep_prob']: 1.
+                }
         proba = self.sess.run(self.graph_nodes['proba'], feed_dict=feed_dict)
         return proba
 
     def _get_graph(self):
-        # Create placeholders for input
+        # Create placeholders for input and dropout_prob
         x_input = tf.placeholder(tf.float32, shape=(None, self.n_input))
         y_input = tf.placeholder(tf.int32, shape=(None))
+        dropout_keep_prob = tf.placeholder(tf.float32)
 
         # Variables
         # Build the fully connected layers
-        # TODO: add dropout
         neurons = x_input
+        l2_loss = tf.constant(0.)
         for i in range(len(self.n_hidden) + 1):
             input_dim = self.n_input if i == 0 else self.n_hidden[i - 1]
             output_dim = self.n_class if i == len(self.n_hidden) else self.n_hidden[i]
@@ -97,9 +106,11 @@ class MultilayerPerceptron(Algorithm):
                     name='W_{}_layer'.format(layer_name))
             b = tf.Variable(tf.truncated_normal([output_dim], stddev=0.1),
                     name='b_{}_layer'.format(layer_name))
+            l2_loss += tf.nn.l2_loss(W)
             # Connect nodes
             neurons = tf.add(tf.matmul(neurons, W), b)
-            if i < len(self.n_hidden):
+            if i < len(self.n_hidden):  # True if not last (output) layer
+                neurons = tf.nn.dropout(neurons, dropout_keep_prob)
                 neurons = tf.nn.relu(neurons)  # TODO: make this optional
 
         logits = neurons
@@ -107,16 +118,18 @@ class MultilayerPerceptron(Algorithm):
 
         # Loss and Accuracy
         loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=y_input, logits=logits))
+        regularized_loss = loss + self.l2_reg_factor * l2_loss
         correct_predictions = tf.equal(tf.cast(tf.argmax(logits, 1), tf.int32), y_input)
         accuracy = tf.reduce_mean(tf.cast(correct_predictions, 'float'))
 
         # Train operation
         # TODO: add so that we could change learning rate?
-        optimize = tf.train.AdamOptimizer().minimize(loss)
+        optimize = tf.train.AdamOptimizer().minimize(regularized_loss)
 
         # Save important nodes to dict and return
         graph = {'x_input': x_input,
                 'y_input': y_input,
+                'dropout_keep_prob': dropout_keep_prob,
                 'proba': proba,
                 'loss': loss,
                 'accuracy': accuracy,
@@ -149,10 +162,15 @@ def _oversampling_batch_iter(samples, labels, num_epochs, batch_size):
 def _batch_iter(samples, labels, num_epochs, batch_size):
     """A batch iterator that generates batches from the data."""
     data_size = len(labels)
-    n_batches_per_epoch = int(np.ceil(data_size / batch_size))
-    for epoch in range(num_epochs):
-        indices = np.arange(data_size)
-        for batch_num in range(n_batches_per_epoch):
-            start_index = int(batch_num * batch_size)
-            end_index = int(min((batch_num + 1) * batch_size, data_size))
-            yield samples[indices[start_index:end_index]], labels[indices[start_index:end_index]],
+    batch_num = 0
+    while (batch_num) * batch_size // data_size < num_epochs:
+        start_index = int(batch_num * batch_size % data_size)
+        end_index = int((batch_num + 1) * batch_size % data_size)
+        if start_index < end_index:
+            samples_batch = samples[start_index:end_index]
+            labels_batch = labels[start_index:end_index]
+        else:
+            samples_batch = np.concatenate((samples[start_index:], samples[:end_index]))
+            labels_batch = np.concatenate((labels[start_index:], labels[:end_index]))
+        yield samples_batch, labels_batch
+        batch_num += 1

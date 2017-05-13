@@ -12,9 +12,9 @@ from utils import split_dataset
 from random_guess import RandomGuessAlgorithm
 from random_forest import RandomForestAlgorithm
 from gradient_boosting import GradientBoostingAlgorithm
-#from multilayer_perceptron import MultilayerPerceptron
+from multilayer_perceptron import MultilayerPerceptron
 from data_processors import Imputer, Processor
-#from xgboost import XGBClassifier
+# from xgboost import XGBClassifier
 
 
 def main(yaml_path='./config.yml', run_name=None):
