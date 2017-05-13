@@ -1,0 +1,35 @@
+experiment:
+    type: 'cv'  # 'single', 'cv'
+    n_folds: 10  # number of folds to use if cv is active
+    np_random_seed: 52
+    years: [1]
+    shuffle_data: True
+    test_share: 0.1
+    algorithm: 'xgboost'
+imputer_params:
+    strategy: 'mean'  # 'mean', 'min'
+    new_features: 'sum'  # False, 'sum', '1-hot'
+processor_params:
+    normalize: True
+algo_params:
+    loss: 'deviance'
+    learning_rate: 0.1
+    n_estimators: 100
+    subsample: 1.0
+    criterion: 'friedman_mse'
+    min_samples_split: 2
+    min_samples_leaf: 1
+    min_weight_fraction_leaf: 0.0
+    max_depth: 3
+    min_impurity_split: 1e-07
+    init: None
+    random_state: None
+    max_features: None
+    verbose: 0
+    max_leaf_nodes: None
+    warm_start: False
+    presort: 'auto'
+    
+analysis:
+    print_results: ['classification_report', 'log_loss', 'accuracy', 'roc_auc']
+    plot_roc: True

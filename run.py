@@ -10,9 +10,12 @@ import matplotlib.pyplot as plt
 from sklearn import metrics, model_selection
 from utils import split_dataset
 from random_guess import RandomGuessAlgorithm
-from sklearn.ensemble import RandomForestClassifier
-from multilayer_perceptron import MultilayerPerceptron
+from random_forest import RandomForestAlgorithm
+from gradient_boosting import GradientBoostingAlgorithm
+#from multilayer_perceptron import MultilayerPerceptron
 from data_processors import Imputer, Processor
+#from xgboost import XGBClassifier
+
 
 def main(yaml_path='./config.yml', run_name=None):
 
@@ -29,7 +32,6 @@ def main(yaml_path='./config.yml', run_name=None):
     np.random.seed(config['experiment']['np_random_seed'])
     for year in config['experiment']['years']:
         do_experiment_for_one_year(run_path, year, config)
-
     # Show figures if any have been generated
     if config['analysis']['plot_roc']:
         plt.show()
@@ -88,24 +90,24 @@ def perform_one_experiment(X_train, Y_train, X_test, Y_test, config):
     if algorithm_name == 'random_guess':
         algorithm = RandomGuessAlgorithm(**config['algo_params'])
     elif algorithm_name == 'rf':
-        algorithm = RandomForestClassifier(**config['algo_params'])
-        #algorithm = RandomForestClassifier(n_estimators=10, max_depth=None, min_samples_split=2, random_state=0)
-        #algorithm = RandomGuessAlgorithm()
+        algorithm = RandomForestAlgorithm(**config['algo_params'])
     elif algorithm_name == 'multilayer_perceptron':
         algorithm = MultilayerPerceptron(n_input=X_train.shape[1], **config['algo_params'])
+    elif algorithm_name == 'xgboost':
+        algorithm = GradientBoostingAlgorithm(**config['algo_params'])
     else:
         raise NotImplementedError('Algorithm {} is not an available option'.format(algorithm_name))
 
     # Perform experiment
 
-    #impute here?
-    X_train = np.nan_to_num(X_train)
+    # impute here?
+    # X_train = np.nan_to_num(X_train)
 
     results = dict()
     results['fit_info'] = algorithm.fit(X_train, Y_train)
 
-    #impute here?
-    X_test = np.nan_to_num(X_test)
+    # impute here?
+    # X_test = np.nan_to_num(X_test)
 
     pred_proba = algorithm.predict_proba(X_test)
     pred = np.argmax(pred_proba, axis=1)
