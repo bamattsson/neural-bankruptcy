@@ -21,7 +21,7 @@ class DataProcessor(metaclass=ABCMeta):
 
 
 class Imputer(DataProcessor):
-    def __init__(self, strategy, new_features=False):
+    def __init__(self, strategy, new_features=False, only_nan_data=False):
         """Initialize object.
 
         Args:
@@ -31,6 +31,9 @@ class Imputer(DataProcessor):
         """
         self.strategy = strategy
         self.new_features = new_features
+        self.only_nan_data = only_nan_data
+        if(self.new_features == False and self.only_nan_data == True):
+            raise ValueError('`new_features` equal to {} and `only_nan_data` equal to {} is not a valid parameter combination'.format(self.new_features, self.only_nan_data))
 
     def fit(self, data):
         if self.strategy == 'mean':
@@ -39,7 +42,7 @@ class Imputer(DataProcessor):
             self.imputing_values = np.nanmin(data, axis=0)
         else:
             raise ValueError('{} is not a valid value for `strategy`'.format(self.strategy))
-        if self.new_features == '1-hot' or self.new_features == '1-hot_only':
+        if self.new_features == '1-hot':
             self.contains_nan = np.any(np.isnan(data), axis=0)
 
     def transform(self, data):
@@ -51,9 +54,6 @@ class Imputer(DataProcessor):
         elif self.new_features == '1-hot':
             extra_features = np.isnan(data)[:, self.contains_nan]
             extra_features = np.atleast_2d(extra_features)
-        elif self.new_features == '1-hot_only':
-            extra_features = np.isnan(data)[:, self.contains_nan]
-            extra_features = np.atleast_2d(extra_features)
         else:
             raise ValueError('{} is not a valid value for `new_features`'.format(self.new_features))
         # Imputes nan values
@@ -62,7 +62,7 @@ class Imputer(DataProcessor):
             isnan = np.isnan(data[i])
             data[i, isnan] = self.imputing_values[isnan]
         
-        if self.new_features == '1-hot_only':
+        if self.only_nan_data:
             out_data = extra_features
         else:
             out_data = np.concatenate((data, extra_features), axis=1)
@@ -76,11 +76,13 @@ class Processor(DataProcessor):
         self.max_nan_share = max_nan_share
 
     def fit(self, data):
+        self.features_to_drop = np.zeros([len(data), 0])
         if self.normalize:
             self.mean = np.nanmean(data, axis=0)
             self.std = np.nanstd(data, axis=0)
-        nan_frequency = np.isnan(data).sum(axis=0)/len(data)
-        self.features_to_drop = np.where(nan_frequency > self.max_nan_share)[0]
+        if self.max_nan_share < 1.0:
+            nan_frequency = np.isnan(data).sum(axis=0)/len(data)
+            self.features_to_drop = np.where(nan_frequency > self.max_nan_share)[0]
             
     def transform(self, data):
         data = np.copy(data)

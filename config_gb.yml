@@ -8,7 +8,8 @@ experiment:
     algorithm: 'gradient_boosting'
 imputer_params:
     strategy: 'mean'  # 'mean', 'min'
-    new_features: 'sum'  # False, 'sum', '1-hot' '1-hot_only'
+    new_features: 'sum'  # False, 'sum', '1-hot'
+    only_nan_data: True # True, False
 processor_params:
     normalize: True
     max_nan_share: 0.5

@@ -8,10 +8,11 @@ experiment:
     algorithm: 'rf'
 imputer_params:
     strategy: 'mean'  # 'mean', 'min'
-    new_features: False  # False, 'sum', '1-hot' '1-hot_only'
+    new_features: '1-hot'  # False, 'sum', '1-hot'
+    only_nan_data: False # True, False
 processor_params:
     normalize: True
-    max_nan_share: 0.5
+    max_nan_share: 1.0
 algo_params:
     n_estimators: 10
     min_samples_split: 2
