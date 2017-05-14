@@ -78,12 +78,12 @@ def load_dataset(year, shuffle=False):
 def perform_one_experiment(X_train, Y_train, X_test, Y_test, config):
     """Performs one experiment with a given data set and generates results."""
     # Prepare data
-    imputer = Imputer(**config['imputer_params'])
-    X_train = imputer.fit_transform(X_train)
-    X_test = imputer.transform(X_test)
     processor = Processor(**config['processor_params'])
     X_train = processor.fit_transform(X_train)
     X_test = processor.transform(X_test)
+    imputer = Imputer(**config['imputer_params'])
+    X_train = imputer.fit_transform(X_train)
+    X_test = imputer.transform(X_test)
 
     # Creates the algorithm object
     algorithm_name = config['experiment']['algorithm']
@@ -99,16 +99,8 @@ def perform_one_experiment(X_train, Y_train, X_test, Y_test, config):
         raise NotImplementedError('Algorithm {} is not an available option'.format(algorithm_name))
 
     # Perform experiment
-
-    # impute here?
-    # X_train = np.nan_to_num(X_train)
-
     results = dict()
     results['fit_info'] = algorithm.fit(X_train, Y_train)
-
-    # impute here?
-    # X_test = np.nan_to_num(X_test)
-
     pred_proba = algorithm.predict_proba(X_test)
     pred = np.argmax(pred_proba, axis=1)
 
