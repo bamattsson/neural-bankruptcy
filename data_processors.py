@@ -39,7 +39,7 @@ class Imputer(DataProcessor):
             self.imputing_values = np.nanmin(data, axis=0)
         else:
             raise ValueError('{} is not a valid value for `strategy`'.format(self.strategy))
-        if self.new_features == '1-hot':
+        if self.new_features == '1-hot' or self.new_features == '1-hot_only':
             self.contains_nan = np.any(np.isnan(data), axis=0)
 
     def transform(self, data):
@@ -51,6 +51,9 @@ class Imputer(DataProcessor):
         elif self.new_features == '1-hot':
             extra_features = np.isnan(data)[:, self.contains_nan]
             extra_features = np.atleast_2d(extra_features)
+        elif self.new_features == '1-hot_only':
+            extra_features = np.isnan(data)[:, self.contains_nan]
+            extra_features = np.atleast_2d(extra_features)
         else:
             raise ValueError('{} is not a valid value for `new_features`'.format(self.new_features))
         # Imputes nan values
@@ -58,23 +61,32 @@ class Imputer(DataProcessor):
         for i in range(len(data)):
             isnan = np.isnan(data[i])
             data[i, isnan] = self.imputing_values[isnan]
-
-        out_data = np.concatenate((data, extra_features), axis=1)
+        
+        if self.new_features == '1-hot_only':
+            out_data = extra_features
+        else:
+            out_data = np.concatenate((data, extra_features), axis=1)
         return out_data
 
 
 class Processor(DataProcessor):
 
-    def __init__(self, normalize):
+    def __init__(self, normalize, max_nan_share):
         self.normalize = normalize
+        self.max_nan_share = max_nan_share
 
     def fit(self, data):
         if self.normalize:
             self.mean = np.nanmean(data, axis=0)
             self.std = np.nanstd(data, axis=0)
-
+        nan_frequency = np.isnan(data).sum(axis=0)/len(data)
+        self.features_to_drop = np.where(nan_frequency > self.max_nan_share)[0]
+            
     def transform(self, data):
         data = np.copy(data)
         if self.normalize:
             data = (data - self.mean) / self.std
+        if len(self.features_to_drop) > 0:
+            data = np.delete(data, self.features_to_drop, axis=1)
         return data
+

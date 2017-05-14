@@ -8,25 +8,24 @@ experiment:
     algorithm: 'rf'
 imputer_params:
     strategy: 'mean'  # 'mean', 'min'
-    new_features: 'sum'  # False, 'sum', '1-hot'
+    new_features: False  # False, 'sum', '1-hot' '1-hot_only'
 processor_params:
     normalize: True
+    max_nan_share: 0.5
 algo_params:
     n_estimators: 10
     min_samples_split: 2
     min_samples_leaf: 1
     min_weight_fraction_leaf: 0.0
-    n_jobs: 1
-    verbose: 0
     warm_start: False
     criterion: 'entropy'
     bootstrap: False
     oob_score: False
     max_features: 'auto'
-    #max_depth: int(None)
-    #max_leaf_nodes: None
+    max_depth: Null
+    max_leaf_nodes: Null
+    class_weight: Null
     #min_impurity_split: None
-    #class_weight: None
 analysis:
     print_results: ['classification_report', 'log_loss', 'accuracy', 'roc_auc']
     plot_roc: True

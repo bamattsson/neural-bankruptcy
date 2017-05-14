@@ -14,8 +14,6 @@ from random_forest import RandomForestAlgorithm
 from gradient_boosting import GradientBoostingAlgorithm
 from multilayer_perceptron import MultilayerPerceptron
 from data_processors import Imputer, Processor
-# from xgboost import XGBClassifier
-
 
 def main(yaml_path='./config.yml', run_name=None):
 
@@ -93,7 +91,7 @@ def perform_one_experiment(X_train, Y_train, X_test, Y_test, config):
         algorithm = RandomForestAlgorithm(**config['algo_params'])
     elif algorithm_name == 'multilayer_perceptron':
         algorithm = MultilayerPerceptron(n_input=X_train.shape[1], **config['algo_params'])
-    elif algorithm_name == 'xgboost':
+    elif algorithm_name == 'gradient_boosting':
         algorithm = GradientBoostingAlgorithm(**config['algo_params'])
     else:
         raise NotImplementedError('Algorithm {} is not an available option'.format(algorithm_name))

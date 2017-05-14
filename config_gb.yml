@@ -5,12 +5,13 @@ experiment:
     years: [1]
     shuffle_data: True
     test_share: 0.1
-    algorithm: 'xgboost'
+    algorithm: 'gradient_boosting'
 imputer_params:
     strategy: 'mean'  # 'mean', 'min'
-    new_features: 'sum'  # False, 'sum', '1-hot'
+    new_features: 'sum'  # False, 'sum', '1-hot' '1-hot_only'
 processor_params:
     normalize: True
+    max_nan_share: 0.5
 algo_params:
     loss: 'deviance'
     learning_rate: 0.1
@@ -22,14 +23,13 @@ algo_params:
     min_weight_fraction_leaf: 0.0
     max_depth: 3
     min_impurity_split: 1e-07
-    init: None
-    random_state: None
-    max_features: None
+    init: Null
+    random_state: Null
+    max_features: Null
     verbose: 0
-    max_leaf_nodes: None
+    max_leaf_nodes: Null
     warm_start: False
     presort: 'auto'
-    
 analysis:
     print_results: ['classification_report', 'log_loss', 'accuracy', 'roc_auc']
     plot_roc: True
