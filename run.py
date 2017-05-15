@@ -15,6 +15,7 @@ from gradient_boosting import GradientBoostingAlgorithm
 from multilayer_perceptron import MultilayerPerceptron
 from data_processors import Imputer, Processor
 
+
 def main(yaml_path='./config.yml', run_name=None):
 
     # Create output directory where experiment is saved
