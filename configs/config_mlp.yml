@@ -5,12 +5,14 @@ experiment:
     years: [1, 2, 3, 4, 5]
     shuffle_data: True
     test_share: 0.1
-    algorithm: 'multilayer_perceptron'  # 'random_guess', multilayer_perceptron'
+    algorithm: 'multilayer_perceptron'  # 'random_guess', multilayer_perceptron', 'rf', 'gradient_boosting'
 imputer_params:
     strategy: 'mean'  # 'mean', 'min'
     new_features: '1-hot'  # False, 'sum', '1-hot'
+    only_nan_data: False # True, False
 processor_params:
     normalize: True
+    max_nan_share: 1.0
 algo_params:  # parameters for multilayer perceptron
     tf_seed: 37050
     dev_share: 0.0
