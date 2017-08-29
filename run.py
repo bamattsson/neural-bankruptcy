@@ -1,14 +1,11 @@
 import sys
 import os
-import shutil
 import time
-import yaml
 import pickle
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn import metrics, model_selection
-from utils import split_dataset
+from utils import split_dataset, load_dataset, load_yaml_and_save
 from algorithms import RandomGuessAlgorithm, RandomForestAlgorithm, GradientBoostingAlgorithm, MultilayerPerceptron
 from data_processors import Imputer, Processor
 
@@ -33,14 +30,6 @@ def main(yaml_path='./config.yml', run_name=None):
         plt.show()
 
 
-def load_yaml_and_save(yaml_path, run_path):
-    with open(yaml_path, 'r') as f:
-        config = yaml.load(f)
-    save_path = os.path.join(run_path, 'cfg.yml')
-    shutil.copyfile(yaml_path, save_path)
-    return config
-
-
 def do_experiment_for_one_year(run_path, year, config):
     """Performs the specified experiments for one year."""
     X, Y = load_dataset(year, shuffle=config['experiment']['shuffle_data'])
@@ -54,21 +43,6 @@ def do_experiment_for_one_year(run_path, year, config):
     with open(results_path, 'wb') as f:
         pickle.dump(results, f)
     show_results(results, year, **config['analysis'])
-
-
-def load_dataset(year, shuffle=False):
-    """Loads chosen data set, mixes it and returns."""
-    main_path = './data/Dane/'
-    file_name = '{}year.csv'.format(year)
-    file_path = os.path.join(main_path, file_name)
-    df = pd.read_csv(file_path, na_values='?')
-    Y = df['class'].values
-    X = df.drop('class', axis=1).values
-    if shuffle:
-        shuffled_idx = np.random.permutation(len(Y))
-        X = X[shuffled_idx, :]
-        Y = Y[shuffled_idx]
-    return X, Y
 
 
 def perform_one_experiment(X_train, Y_train, X_test, Y_test, config):
