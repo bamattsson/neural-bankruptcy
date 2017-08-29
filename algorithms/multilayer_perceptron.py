@@ -8,8 +8,9 @@ from utils import split_dataset
 
 class MultilayerPerceptron(Algorithm):
 
-    def __init__(self, n_input, n_hidden, dropout_keep_prob, l2_reg_factor, dev_share, num_epochs, batch_size,
-            batch_iterator_type, evaluate_every_n_steps, plot_training, tf_seed):
+    def __init__(self, n_input, n_hidden, dropout_keep_prob, l2_reg_factor,
+            dev_share, num_epochs, batch_size, batch_iterator_type,
+            evaluate_every_n_steps, plot_training, tf_seed):
         # Structure of model
         self.n_input = n_input
         self.n_hidden = n_hidden
@@ -34,10 +35,12 @@ class MultilayerPerceptron(Algorithm):
         # TODO: add early stopping with tf.train.Saver
 
     def fit(self, samples, labels):
-        """Train the model with the samples and lables provided according to the parameters of the model."""
+        """Train the model with the samples and lables provided according to
+        the parameters of the model."""
 
         # Split into train and dev
-        x_train, y_train, x_dev, y_dev = split_dataset(samples, labels, self.dev_share)
+        x_train, y_train, x_dev, y_dev = split_dataset(samples, labels,
+                self.dev_share)
 
         # Create batch iterator
         if self.batch_iterator_type == 'normal':
@@ -45,21 +48,25 @@ class MultilayerPerceptron(Algorithm):
         elif self.batch_iterator_type == 'oversample':
             batch_iter = _oversampling_batch_iter
         else:
-            raise ValueError('{} is not a valid batch_iterator_type'.format(self.batch_iterator_type))
+            raise ValueError('{} is not a valid batch_iterator_type'.format(
+                self.batch_iterator_type))
 
         # Train model
         train_batch_nr = []
         train_loss_val = []
         dev_batch_nr = []
         dev_loss_val = []
-        for i, (x, y) in enumerate(batch_iter(x_train, y_train, self.num_epochs, self.batch_size)):
+        for i, (x, y) in enumerate(batch_iter(x_train, y_train,
+                self.num_epochs, self.batch_size)):
             # Train
             feed_dict = {
                     self.graph_nodes['x_input']: x,
                     self.graph_nodes['y_input']: y,
-                    self.graph_nodes['dropout_keep_prob']: self.dropout_keep_prob
+                    self.graph_nodes['dropout_keep_prob']:
+                            self.dropout_keep_prob
                     }
-            _, loss_val = self.sess.run([self.graph_nodes['optimize'], self.graph_nodes['loss']], feed_dict=feed_dict)
+            _, loss_val = self.sess.run([self.graph_nodes['optimize'],
+                self.graph_nodes['loss']], feed_dict=feed_dict)
             train_batch_nr.append(i)
             train_loss_val.append(loss_val)
             if i % self.evaluate_every_n_steps == 0:
@@ -68,7 +75,8 @@ class MultilayerPerceptron(Algorithm):
                         self.graph_nodes['y_input']: y_dev,
                         self.graph_nodes['dropout_keep_prob']: 1.
                         }
-                loss_val = self.sess.run(self.graph_nodes['loss'], feed_dict=feed_dict)
+                loss_val = self.sess.run(self.graph_nodes['loss'],
+                        feed_dict=feed_dict)
                 dev_batch_nr.append(i)
                 dev_loss_val.append(loss_val)
 
@@ -99,12 +107,14 @@ class MultilayerPerceptron(Algorithm):
         l2_norm = tf.constant(0.)
         for i in range(len(self.n_hidden) + 1):
             input_dim = self.n_input if i == 0 else self.n_hidden[i - 1]
-            output_dim = self.n_class if i == len(self.n_hidden) else self.n_hidden[i]
+            output_dim = self.n_class if i == len(self.n_hidden) \
+                    else self.n_hidden[i]
             layer_name = i + 1 if i < len(self.n_hidden) else 'out'
             # Create weights
-            W = tf.Variable(tf.truncated_normal([input_dim, output_dim], stddev=0.1),
-                    name='W_{}_layer'.format(layer_name))
-            b = tf.Variable(0.1 * np.ones(output_dim, dtype=np.float32), name='b_{}_layer'.format(layer_name))
+            W = tf.Variable(tf.truncated_normal([input_dim, output_dim],
+                    stddev=0.1), name='W_{}_layer'.format(layer_name))
+            b = tf.Variable(0.1 * np.ones(output_dim, dtype=np.float32),
+                    name='b_{}_layer'.format(layer_name))
             l2_norm += tf.nn.l2_loss(W)
             # Connect nodes
             neurons = tf.add(tf.matmul(neurons, W), b)
@@ -116,9 +126,11 @@ class MultilayerPerceptron(Algorithm):
         proba = tf.nn.softmax(logits)
 
         # Loss and Accuracy
-        loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=y_input, logits=logits))
+        loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(
+            labels=y_input, logits=logits))
         regularized_loss = loss + self.l2_reg_factor * l2_norm
-        correct_predictions = tf.equal(tf.cast(tf.argmax(logits, 1), tf.int32), y_input)
+        correct_predictions = tf.equal(tf.cast(tf.argmax(logits, 1), tf.int32),
+                y_input)
         accuracy = tf.reduce_mean(tf.cast(correct_predictions, 'float'))
 
         # Train operation
@@ -138,7 +150,8 @@ class MultilayerPerceptron(Algorithm):
 
 
 def _oversampling_batch_iter(samples, labels, num_epochs, batch_size):
-    """Batch iterator that oversamples the rare class so that both classes become equally frequent."""
+    """Batch iterator that oversamples the rare class so that both classes
+    become equally frequent."""
     pos_examples = (labels == 1)
     pos_samples, pos_labels = samples[pos_examples], labels[pos_examples]
     neg_examples = np.logical_not(pos_examples)
@@ -147,14 +160,18 @@ def _oversampling_batch_iter(samples, labels, num_epochs, batch_size):
     neg_batch_size = np.floor(batch_size / 2)
     pos_batch_size = np.ceil(batch_size / 2)
 
-    neg_batch_iter = _batch_iter(neg_samples, neg_labels, num_epochs, neg_batch_size)
-    pos_batch_iter = _batch_iter(pos_samples, pos_labels, num_epochs, pos_batch_size)
+    neg_batch_iter = _batch_iter(neg_samples, neg_labels, num_epochs,
+            neg_batch_size)
+    pos_batch_iter = _batch_iter(pos_samples, pos_labels, num_epochs,
+            pos_batch_size)
 
     for neg_batch, pos_batch in zip(neg_batch_iter, pos_batch_iter):
         neg_batch_samples, neg_batch_labels = neg_batch
         pos_batch_samples, pos_batch_labels = pos_batch
-        batch_samples = np.concatenate((neg_batch_samples, pos_batch_samples), axis=0)
-        batch_labels = np.concatenate((neg_batch_labels, pos_batch_labels), axis=0)
+        batch_samples = np.concatenate((neg_batch_samples, pos_batch_samples),
+                axis=0)
+        batch_labels = np.concatenate((neg_batch_labels, pos_batch_labels),
+                axis=0)
         yield batch_samples, batch_labels
 
 
@@ -169,7 +186,9 @@ def _batch_iter(samples, labels, num_epochs, batch_size):
             samples_batch = samples[start_index:end_index]
             labels_batch = labels[start_index:end_index]
         else:
-            samples_batch = np.concatenate((samples[start_index:], samples[:end_index]))
-            labels_batch = np.concatenate((labels[start_index:], labels[:end_index]))
+            samples_batch = np.concatenate((samples[start_index:],
+                samples[:end_index]))
+            labels_batch = np.concatenate((labels[start_index:],
+                labels[:end_index]))
         yield samples_batch, labels_batch
         batch_num += 1

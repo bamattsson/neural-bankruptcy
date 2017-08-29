@@ -25,15 +25,20 @@ class Imputer(DataProcessor):
         """Initialize object.
 
         Args:
-            strategy (str): strategy to follow when imputing. Available: 'mean', 'min'
-            new_features (str): whether we should create new features depending from the information from missing
-                values. False creates no new features, 'sum' creates one new and '1-hot' creates multiple new features.
+            strategy (str): strategy to follow when imputing. Available:
+                'mean', 'min'
+            new_features (str): whether we should create new features depending
+                from the information from missing values. False creates no new
+                features, 'sum' creates one new and '1-hot' creates multiple
+                new features.
         """
         self.strategy = strategy
         self.new_features = new_features
         self.only_nan_data = only_nan_data
-        if(self.new_features == False and self.only_nan_data == True):
-            raise ValueError('`new_features` equal to {} and `only_nan_data` equal to {} is not a valid parameter combination'.format(self.new_features, self.only_nan_data))
+        if (self.new_features == False and self.only_nan_data == True):
+            raise ValueError('`new_features` equal to {} and `only_nan_data` '
+                'equal to {} is not a valid parameter combination'.format(
+                    self.new_features, self.only_nan_data))
 
     def fit(self, data):
         if self.strategy == 'mean':
@@ -41,7 +46,9 @@ class Imputer(DataProcessor):
         elif self.strategy == 'min':
             self.imputing_values = np.nanmin(data, axis=0)
         else:
-            raise ValueError('{} is not a valid value for `strategy`'.format(self.strategy))
+            raise ValueError(
+                    '{} is not a valid value for `strategy`'.format(
+                        self.strategy))
         if self.new_features == '1-hot':
             self.contains_nan = np.any(np.isnan(data), axis=0)
 
@@ -55,13 +62,15 @@ class Imputer(DataProcessor):
             extra_features = np.isnan(data)[:, self.contains_nan]
             extra_features = np.atleast_2d(extra_features)
         else:
-            raise ValueError('{} is not a valid value for `new_features`'.format(self.new_features))
+            raise ValueError(
+                    '{} is not a valid value for `new_features`'.format(
+                        self.new_features))
         # Imputes nan values
         data = np.copy(data)
         for i in range(len(data)):
             isnan = np.isnan(data[i])
             data[i, isnan] = self.imputing_values[isnan]
-        
+
         if self.only_nan_data:
             out_data = extra_features
         else:
@@ -81,9 +90,10 @@ class Processor(DataProcessor):
             self.mean = np.nanmean(data, axis=0)
             self.std = np.nanstd(data, axis=0)
         if self.max_nan_share < 1.0:
-            nan_frequency = np.isnan(data).sum(axis=0)/len(data)
-            self.features_to_drop = np.where(nan_frequency > self.max_nan_share)[0]
-            
+            nan_frequency = np.isnan(data).sum(axis=0) / len(data)
+            self.features_to_drop = np.where(nan_frequency >
+                    self.max_nan_share)[0]
+
     def transform(self, data):
         data = np.copy(data)
         if self.normalize:
@@ -91,4 +101,3 @@ class Processor(DataProcessor):
         if len(self.features_to_drop) > 0:
             data = np.delete(data, self.features_to_drop, axis=1)
         return data
-

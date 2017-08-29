@@ -22,7 +22,8 @@ class Algorithm(metaclass=ABCMeta):
         Args:
             samples (np.ndarray): X data, shape (n_samples, n_features)
         Returns:
-            proba (np.ndarray): Probability of belonging to a particular class, shape (n_samples, n_classes)
+            proba (np.ndarray): Probability of belonging to a particular class,
+                shape (n_samples, n_classes)
         """
         proba = np.zeros((samples.shape[0], 2))
         return proba

@@ -36,7 +36,8 @@ def split_dataset(X, Y, share_last):
     Args:
         X (np.array): X data
         Y (np.array): Y data
-        share_last (float): how large share of the dataset that should be in the last part of the data set
+        share_last (float): how large share of the dataset that should be in
+            the last part of the data set
     """
     split_point = int(len(Y) * share_last)
     X_last = X[:split_point, :]
