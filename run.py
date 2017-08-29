@@ -9,10 +9,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn import metrics, model_selection
 from utils import split_dataset
-from random_guess import RandomGuessAlgorithm
-from random_forest import RandomForestAlgorithm
-from gradient_boosting import GradientBoostingAlgorithm
-from multilayer_perceptron import MultilayerPerceptron
+from algorithms import RandomGuessAlgorithm, RandomForestAlgorithm, GradientBoostingAlgorithm, MultilayerPerceptron
 from data_processors import Imputer, Processor
 
 

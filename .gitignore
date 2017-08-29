@@ -2,6 +2,8 @@
 data/
 output/
 *.swp
+*.eps
+.DS_Store
 
 #### Added by github
 # Byte-compiled / optimized / DLL files

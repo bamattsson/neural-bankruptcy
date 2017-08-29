@@ -1,5 +1,5 @@
 import numpy as np
-from algorithm import Algorithm
+from .algorithm import Algorithm
 from sklearn.ensemble import GradientBoostingClassifier
 
 class GradientBoostingAlgorithm(Algorithm):

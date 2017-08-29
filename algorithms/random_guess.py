@@ -1,5 +1,5 @@
 import numpy as np
-from algorithm import Algorithm
+from .algorithm import Algorithm
 
 
 class RandomGuessAlgorithm(Algorithm):
