@@ -1,6 +1,6 @@
 # Description
 
-Bachelor's thesis by [Björn Mattsson](https://www.linkedin.com/in/björn-mattsson-02357b70) and 
+[Bachelor's thesis](https://gupea.ub.gu.se/handle/2077/54283) by [Björn Mattsson](https://www.linkedin.com/in/björn-mattsson-02357b70) and 
 [Olof Steinert](https://www.linkedin.com/in/olof-steinert/) in Economics at 
 [University of Gothenburg](http://handels.gu.se/).
 
